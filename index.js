@@ -5,6 +5,24 @@ app.use(express.json());
 const JWT_SECRET='swapnilshendeapekshachavanandweareswashaaaaa'
 
 const userData = [];
+
+const auth=(req,res,next) => {
+  const token=req.headers.token;
+  if (!token) {
+    res.status(403).json({
+        message:'Token not provided'
+    })
+  }
+  try {
+    const decode=jwt.verify(token,JWT_SECRET)
+    req.user=decode
+    next()
+  } catch (error) {
+    return res.status(403).json({
+      message: "x`",
+    });
+  }
+}
 const signupHandler = (req, res) => {
   const userName = req.body.userName;
   const password = req.body.password;
@@ -28,7 +46,7 @@ const signinHandler = (req, res) => {
     const token=jwt.sign({
         userName
     },JWT_SECRET)
-
+  res.header('token',token)
     res.json({
         messgae:'User Signin successfully..',
         token:token
@@ -41,21 +59,14 @@ const signinHandler = (req, res) => {
 };
 
 const meHandler=(req,res)=>{
-    const token=req.headers.token;
-    const isValidToken=jwt.verify(token,JWT_SECRET);
-    if (isValidToken) {
-        res.json({
-            message:'User Authentication Successfully'
-        })
-    }else{
-        res.status(403).json({
-            message:'Unauthorized to access'
-        })
-    }
+res.json({
+    message: "User Authentication Successfully",
+    user: req.user,
+  });
 }
 
 app.post("/signup", signupHandler);
 app.post("/signin", signinHandler);
-app.get("/me",meHandler);
+app.get("/me",auth,meHandler);
 
 app.listen(3000);
